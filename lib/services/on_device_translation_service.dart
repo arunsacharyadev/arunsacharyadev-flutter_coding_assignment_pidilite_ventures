@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 
 class OnDeviceTranslationService {
@@ -8,37 +9,43 @@ class OnDeviceTranslationService {
 
   OnDeviceTranslationService._internal();
 
-  Future<String> translateText(
-    String text, {
-    TranslateLanguage? sourceLanguage,
-    TranslateLanguage? targetLanguage,
-  }) async {
-    final onDeviceTranslator = OnDeviceTranslator(
-      sourceLanguage: sourceLanguage ?? TranslateLanguage.english,
-      targetLanguage: targetLanguage ?? TranslateLanguage.hindi,
-    );
+  final TranslateLanguage _sourceLanguage = TranslateLanguage.english;
+  final TranslateLanguage _targetLanguage = TranslateLanguage.hindi;
+
+  void initialize() {
+    downloadLanguages();
+  }
+
+  Future<void> downloadLanguages() async {
     final modelManager = OnDeviceTranslatorModelManager();
+    try {
+      final bool isSourceLanguageDownloaded =
+          await modelManager.downloadModel(_sourceLanguage.bcpCode);
+      debugPrint('isSourceLanguageDownloaded:\t$isSourceLanguageDownloaded');
 
-    final bool isEnglishModelDownloaded =
-        await modelManager.isModelDownloaded(TranslateLanguage.english.bcpCode);
-    // debugPrint('isEnglishModelDownloaded:\t$isEnglishModelDownloaded');
-    if (!isEnglishModelDownloaded) {
-      final bool response =
-          await modelManager.downloadModel(TranslateLanguage.english.bcpCode);
-      // debugPrint('isEnglishModelDownloadedResponse:\t$response');
+      final bool isTargetLanguageDownloaded =
+          await modelManager.downloadModel(_targetLanguage.bcpCode);
+      debugPrint('isTargetLanguageDownloaded:\t$isTargetLanguageDownloaded');
+    } catch (e) {
+      rethrow;
     }
-    final bool isHindiModelDownloaded =
-        await modelManager.isModelDownloaded(TranslateLanguage.hindi.bcpCode);
-    // debugPrint('isHindiModelDownloaded:\t$isHindiModelDownloaded');
-    if (!isHindiModelDownloaded) {
-      final bool response =
-          await modelManager.downloadModel(TranslateLanguage.hindi.bcpCode);
-      // debugPrint('isHindiModelDownloadedResponse:\t$response');
+  }
+
+  Future<String?> translateText(String text) async {
+    String? translatedText;
+    final onDeviceTranslator = OnDeviceTranslator(
+      sourceLanguage: _sourceLanguage,
+      targetLanguage: _targetLanguage,
+    );
+
+    try {
+      translatedText = await onDeviceTranslator.translateText(text);
+      debugPrint('translatedText:\t$translatedText');
+      await onDeviceTranslator.close();
+    } catch (e) {
+      rethrow;
     }
 
-    final String translatedText = await onDeviceTranslator.translateText(text);
-    // debugPrint('translatedText:\t$translatedText');
-    await onDeviceTranslator.close();
     return translatedText;
   }
 }

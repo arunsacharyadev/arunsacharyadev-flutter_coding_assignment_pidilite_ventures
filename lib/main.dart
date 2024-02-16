@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'services/on_device_translation_service.dart';
 import 'viewModels/home_view_model.dart';
 import 'views/home/home_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  OnDeviceTranslationService().initialize();
   runApp(const MyApp());
 }
 
