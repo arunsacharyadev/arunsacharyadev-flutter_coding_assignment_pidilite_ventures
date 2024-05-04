@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter_coding_assignment_pidilite_ventures/repositories/home_repository.dart";
 import "package:infinite_scroll_pagination/infinite_scroll_pagination.dart";
 import "package:permission_handler/permission_handler.dart";
 import "package:speech_to_text/speech_recognition_result.dart";
@@ -18,70 +19,14 @@ class HomeViewModel extends ChangeNotifier {
   late final PagingController<int, tacm.Detail> pagingController;
   final int _perPageSize = 15;
 
-  Map<String, dynamic> _tAndCData = {
-    "details": [
-      {
-        "id": 11989,
-        "value": "1 Year Service Warranty & 5 Years Plywood Warranty",
-        "createdAt": "2024-01-06 12:08:11",
-        "updatedAt": "2024-01-06 12:08:11"
-      },
-      {
-        "id": 11990,
-        "value":
-            "Customer Should inform about the Changes (if any Design & colour) before\nproduction or else Customer should pay Extra",
-        "createdAt": "2024-01-06 12:08:11",
-        "updatedAt": "2024-01-06 12:08:11"
-      },
-      {
-        "id": 11991,
-        "value":
-            "Material will be delivered 3-4 weeks the date of Confirmation of Order",
-        "createdAt": "2024-01-06 12:08:11",
-        "updatedAt": "2024-01-06 12:08:11"
-      },
-      {
-        "id": 11992,
-        "value":
-            "Quotation cant be changed / revised once accepted by the customer",
-        "createdAt": "2024-01-06 12:08:11",
-        "updatedAt": "2024-01-06 12:08:11"
-      },
-      {
-        "id": 11993,
-        "value":
-            "If any extra works are needed then it should be paid by customer",
-        "createdAt": "2024-01-06 12:08:11",
-        "updatedAt": "2024-01-06 12:08:11"
-      },
-      {
-        "id": 11994,
-        "value":
-            "Custom Handles will be charged extra.Handle price may vary based of designs &\nspecifications",
-        "createdAt": "2024-01-06 12:08:11",
-        "updatedAt": "2024-01-06 12:08:11"
-      },
-      {
-        "id": 11995,
-        "value": "Once the Project is confirmed, the amount cannot be refunded",
-        "createdAt": "2024-01-06 12:08:11",
-        "updatedAt": "2024-01-06 12:08:11"
-      },
-      {
-        "id": 11996,
-        "value": "This Quote will be valid only for 15 Days",
-        "createdAt": "2024-01-06 12:08:11",
-        "updatedAt": "2024-01-06 12:08:11"
-      },
-      {
-        "id": 11997,
-        "value":
-            "Any additional work which is out of the quotation in any aspects is to be paid extra by\nthe customer",
-        "createdAt": "2024-01-06 12:08:11",
-        "updatedAt": "2024-01-06 12:08:11"
-      }
-    ]
-  };
+  Map<String, dynamic>? _tAndCData;
+  bool _isInitial = false;
+
+  bool get isInitial => _isInitial;
+
+  set isInitial(bool value) {
+    _isInitial = value;
+  }
 
   tacm.TermsAndConditionsModel get tAndCData =>
       tacm.TermsAndConditionsModel.fromJson(_tAndCData);
@@ -97,7 +42,10 @@ class HomeViewModel extends ChangeNotifier {
 
   Future<void> fetchTAndCData(int pageKey) async {
     try {
-      await Future.delayed(const Duration(seconds: 3));
+      if (!isInitial) {
+        isInitial = true;
+        tAndCData = (await HomeRepository().getTAndCDataFromApi())!;
+      }
       int end = pageKey + _perPageSize;
       List<tacm.Detail> items = tAndCData.details.sublist(
         pageKey,
@@ -118,13 +66,13 @@ class HomeViewModel extends ChangeNotifier {
 
   addTAndCData(String value) {
     List<tacm.Detail> details = tAndCData.details;
-    int previousId = details.last.id;
+    int previousId =
+        details.reduce((curr, next) => (curr.id > next.id) ? curr : next).id;
     details.add(
       tacm.Detail(
+        userId: 11,
         id: previousId + 1,
-        value: value,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
+        body: value,
       ),
     );
     tAndCData = tacm.TermsAndConditionsModel(details: details);
@@ -134,9 +82,7 @@ class HomeViewModel extends ChangeNotifier {
     tacm.TermsAndConditionsModel data = tAndCData;
     data.details.map((e) {
       if (e.id == id) {
-        e
-          ..value = value
-          ..updatedAt = DateTime.now();
+        e.body = value;
       }
       return e;
     }).toList();
@@ -162,7 +108,7 @@ class HomeCardViewModel extends ChangeNotifier {
     isLoading.value = true;
 
     translatedText =
-        await OnDeviceTranslationService().translateText(detail.value);
+        await OnDeviceTranslationService().translateText(detail.body ?? '');
     isLoading.value = false;
     notifyListeners();
   }
@@ -187,7 +133,7 @@ class AddUpdateBottomSheetViewModel extends ChangeNotifier {
       case EditType.add:
         break;
       case EditType.update:
-        textEditingController.text = detail?.value ?? '';
+        textEditingController.text = detail?.body ?? '';
         break;
       default:
         break;
@@ -272,7 +218,7 @@ class AddUpdateBottomSheetViewModel extends ChangeNotifier {
       return "can't be empty";
     } else if (editType == EditType.update &&
         input.isNotEmpty &&
-        detail?.value == input) {
+        detail?.body == input) {
       return "can't be the same, update any changes";
     }
     return null;

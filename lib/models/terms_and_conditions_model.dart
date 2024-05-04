@@ -25,29 +25,29 @@ class TermsAndConditionsModel {
 }
 
 class Detail {
+  int userId;
   int id;
-  String value;
-  DateTime createdAt;
-  DateTime updatedAt;
+  String? title;
+  String? body;
 
   Detail({
+    required this.userId,
     required this.id,
-    required this.value,
-    required this.createdAt,
-    required this.updatedAt,
+    this.title,
+    this.body,
   });
 
   factory Detail.fromJson(Map<String, dynamic>? json) => Detail(
-        id: json?["id"],
-        value: json?["value"],
-        createdAt: DateTime.parse(json?["createdAt"]),
-        updatedAt: DateTime.parse(json?["updatedAt"]),
+        userId: json?['userId'],
+        id: json?['id'],
+        title: json?['title'],
+        body: json?['body'],
       );
 
   Map<String, dynamic> toJson() => {
-        "id": id,
-        "value": value,
-        "createdAt": createdAt.toIso8601String(),
-        "updatedAt": updatedAt.toIso8601String(),
+        'userId': userId,
+        'id': id,
+        'title': title,
+        'body': body,
       };
 }

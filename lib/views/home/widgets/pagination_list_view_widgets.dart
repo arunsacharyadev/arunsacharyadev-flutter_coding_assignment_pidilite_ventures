@@ -53,7 +53,7 @@ class _ItemBuilderState extends State<_ItemBuilder> {
               _commonHeightPadding,
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Text(widget.detail.value.replaceAll('\n', ' ').trim()),
+                child: Text(widget.detail.body!.replaceAll('\n', ' ').trim()),
               ),
               _commonHeightPadding,
               if (homeCardViewModel.translatedText != null)
@@ -125,9 +125,9 @@ class _FirstPageErrorIndicatorBuilder extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Something Went Wrong',
-            style: TextStyle(
+          Text(
+            error.toString(),
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
